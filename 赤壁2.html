@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤壁：折戟與星落 - 決戰：烈火赤壁</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #140503;
+            color: #f0dbd8;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', Georgia, serif;
+            background-image: radial-gradient(circle at center, #3d120a 0%, #0a0201 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: background-color 1.5s ease, background-image 1.5s ease;
+        }
+
+        /* 畫面震動特效 */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-2px, -3px) rotate(-1deg); filter: brightness(1.2); }
+            20% { transform: translate(-4px, 0px) rotate(1deg); }
+            30% { transform: translate(4px, 3px) rotate(0deg); filter: brightness(1.5); }
+            40% { transform: translate(2px, -2px) rotate(1deg); }
+            50% { transform: translate(-2px, 3px) rotate(-1deg); }
+            60% { transform: translate(-4px, 1px) rotate(0deg); filter: brightness(1.2); }
+            70% { transform: translate(4px, 1px) rotate(-1deg); }
+            80% { transform: translate(-2px, -2px) rotate(1deg); }
+            90% { transform: translate(2px, 3px) rotate(0deg); }
+            100% { transform: translate(0px, 0px) rotate(0deg); filter: brightness(1); }
+        }
+        .shake { animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; }
+
+        /* 奇謀專屬爆炎閃光 */
+        .stratagem-flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 85, 0, 0.4); z-index: 50;
+            opacity: 0; pointer-events: none; mix-blend-mode: color-dodge;
+        }
+        .flash-active { animation: massiveFlash 0.8s ease-out forwards; }
+        @keyframes massiveFlash {
+            0% { opacity: 0; transform: scale(1); }
+            10% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+
+        .game-container {
+            width: 100%; max-width: 800px; padding: 40px;
+            text-align: center; position: relative; z-index: 10;
+        }
+
+        /* 頂部狀態列 */
+        .status-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #66241a; padding-bottom: 15px; margin-bottom: 30px;
+            font-size: 14px; color: #b8827a; letter-spacing: 2px;
+        }
+
+        .status-item span { font-weight: bold; text-shadow: 0 0 5px rgba(235, 94, 73, 0.3); transition: all 0.5s ease; }
+        .stat-fire { color: #ff5500; }
+        .stat-chaos { color: #ffaa00; }
+        
+        /* 老臣心血條設計 */
+        .heart-container { display: flex; align-items: center; gap: 10px; }
+        .health-bar-bg {
+            width: 100px; height: 8px; background-color: #331111;
+            border-radius: 4px; overflow: hidden; border: 1px solid #66241a;
+            transition: box-shadow 0.3s ease;
+        }
+        .health-bar-bg.damage-flash {
+            box-shadow: 0 0 15px #ff3333, inset 0 0 10px #ff3333;
+            border-color: #ff3333;
+        }
+        .health-bar-fill {
+            height: 100%; background: linear-gradient(90deg, #ff3333, #ff6666);
+            width: 80%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease;
+            box-shadow: 0 0 10px rgba(255, 51, 51, 0.8);
+        }
+
+        /* 決戰標題特效 */
+        .battle-banner {
+            font-family: 'Noto Serif TC', serif; font-size: 26px; letter-spacing: 8px;
+            color: #ff4500; margin-bottom: 30px; text-shadow: 0 0 20px rgba(255, 69, 0, 0.6);
+            animation: pulse 2s infinite alternate; transition: color 1s ease;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); text-shadow: 0 0 20px rgba(255, 69, 0, 0.6); }
+            100% { transform: scale(1.02); text-shadow: 0 0 35px rgba(255, 69, 0, 1); }
+        }
+
+        /* 敘事文本框 (加入模糊對焦特效) */
+        .story-box {
+            min-height: 160px; margin-bottom: 40px; line-height: 1.9; font-size: 18px;
+            color: #f7eae8; text-align: left; background: rgba(15, 3, 2, 0.8);
+            padding: 25px; border-radius: 8px; border-left: 4px solid #ff4500;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            transition: opacity 0.5s ease;
+        }
+        .story-box.blur-focus { animation: blurFocus 0.8s forwards ease-out; }
+        @keyframes blurFocus {
+            0% { filter: blur(4px); opacity: 0; transform: translateY(10px); }
+            100% { filter: blur(0px); opacity: 1; transform: translateY(0); }
+        }
+
+        /* 互動按鈕 */
+        .btn-container { display: flex; flex-direction: column; align-items: center; gap: 15px; transition: opacity 0.5s ease; }
+        .action-btn {
+            background: rgba(30, 7, 5, 0.6); border: 1px solid #66241a; color: #d9aba3;
+            padding: 14px 30px; font-size: 16px; cursor: pointer; letter-spacing: 2px;
+            width: 85%; max-width: 480px; position: relative; overflow: hidden; border-radius: 4px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .action-btn:hover {
+            border-color: #ff5500; color: #fff; background-color: rgba(255, 85, 0, 0.15);
+            transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 0 15px rgba(255, 85, 0, 0.2);
+        }
+        .action-btn.stratagem { color: #ff8888; border-color: #993333; }
+        .action-btn.stratagem:hover {
+            border-color: #ff3333; background-color: rgba(255, 51, 51, 0.15);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 0 20px rgba(255, 51, 51, 0.4); text-shadow: 0 0 8px #ff3333;
+        }
+        .action-btn.coward { color: #999; border-color: #555; }
+        .action-btn.coward:hover { border-color: #888; background-color: rgba(255,255,255,0.05); color: #ccc; }
+
+        /* 底部火網與熱氣扭曲特效 */
+        .fire-bg {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 60%;
+            background: linear-gradient(to top, rgba(255,69,0,0.2), transparent);
+            z-index: 1; pointer-events: none; transition: opacity 2s ease;
+        }
+        .heat-haze {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 60%;
+            background: repeating-linear-gradient(0deg, transparent, rgba(255, 69, 0, 0.03) 15px, transparent 30px);
+            animation: hazeMove 3s linear infinite; pointer-events: none; z-index: 2; mix-blend-mode: screen;
+            transition: opacity 2s ease;
+        }
+        @keyframes hazeMove { 0% { transform: translateY(0); } 100% { transform: translateY(-30px); } }
+
+        .particles { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 3; transition: opacity 2s ease; }
+        #rainCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; transition: opacity 2s ease; }
+
+        /* 戰船火攻 SVG (加入水面浮動動畫) */
+        .ship-svg {
+            width: 180px; height: 120px; margin: 0 auto 20px auto; opacity: 0.9;
+            transition: all 1.5s ease; animation: shipFloat 4s ease-in-out infinite;
+        }
+        @keyframes shipFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+        .ship-fire { fill: none; stroke: #ff4500; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: stroke 1.5s ease; }
+        .fire-particles-svg { animation: flicker 0.3s infinite alternate; transition: opacity 1.5s ease; }
+        @keyframes flicker {
+            0% { opacity: 0.6; transform: translateY(0px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(-4px) scale(1.1); filter: drop-shadow(0 0 5px #ffaa00); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stratagem-flash" id="stratagemFlash"></div>
+    <div class="fire-bg" id="fireBg"></div>
+    <div class="heat-haze" id="heatHaze"></div>
+    <div class="particles" id="particlesContainer"></div>
+    <canvas id="rainCanvas"></canvas>
+
+    <div class="game-container" id="gameContainer">
+        <div class="status-bar" id="statusBar">
+            <div class="status-item">火勢：<span id="fireStat" class="stat-fire">40</span>%</div>
+            <div class="status-item">曹軍混亂度：<span id="chaosStat" class="stat-chaos">30</span>%</div>
+            <div class="status-item heart-container">
+                老臣心
+                <div class="health-bar-bg" id="healthBarBg">
+                    <div class="health-bar-fill" id="heartBarFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <svg class="ship-svg" id="shipSvg" viewBox="0 0 200 100">
+            <path class="ship-fire" id="shipPath1" d="M20 60 L60 60 L70 45 L50 45 L45 30 L40 45 L15 45 Z" />
+            <path class="ship-fire" id="shipPath2" d="M80 60 L120 60 L130 45 L110 45 L105 30 L100 45 L75 45 Z" />
+            <path class="ship-fire" id="shipPath3" d="M140 60 L180 60 L190 45 L170 45 L165 30 L160 45 L135 45 Z" />
+            <path d="M60 52 L80 52 M120 52 L140 52" stroke="#4a1a11" stroke-width="3"/>
+            <g class="fire-particles-svg" id="svgFireParticles" stroke="#ffaa00" stroke-width="1.5" fill="none">
+                <path d="M30 40 Q35 25 32 15 M55 35 Q50 20 53 10" />
+                <path d="M90 40 Q95 25 92 15 M115 35 Q110 20 113 10" />
+                <path d="M150 40 Q155 25 152 15 M175 35 Q170 20 173 10" />
+            </g>
+        </svg>
+
+        <div class="battle-banner" id="battleBanner">
+            【 決 戰 ： 烈 火 赤 壁 】
+        </div>
+
+        <div class="story-box blur-focus" id="storyBox"></div>
+
+        <div class="btn-container" id="btnContainer" style="opacity: 0; pointer-events: none;"></div>
+    </div>
+
+    <script>
+        // 遊戲初始狀態
+        let gameState = { fire: 40, chaos: 30, heart: 80 };
+
+        // 動態生成背景漂浮火星效果
+        function createParticles() {
+            const container = document.getElementById('particlesContainer');
+            for(let i=0; i<35; i++) {
+                let particle = document.createElement('div');
+                particle.style.position = 'absolute';
+                particle.style.width = Math.random() * 5 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.backgroundColor = Math.random() > 0.4 ? '#ff4500' : '#ffaa00';
+                particle.style.borderRadius = '50%';
+                particle.style.opacity = Math.random() * 0.8 + 0.2;
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.bottom = '-10px';
+                
+                let duration = Math.random() * 3 + 2;
+                let delay = Math.random() * 5;
+                
+                particle.animate([
+                    { transform: `translate(0, 0) scale(1)`, opacity: 0.8 },
+                    { transform: `translate(${Math.random()*150 - 75}px, -100vh) scale(0)`, opacity: 0 }
+                ], { duration: duration * 1000, delay: delay * 1000, iterations: Infinity });
+                
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Canvas 動態雨特效設定
+        function initRainEffect() {
+            const canvas = document.getElementById('rainCanvas');
+            const ctx = canvas.getContext('2d');
+            function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            const maxDrops = 70;
+            const angle = 0.25;  
+            const r_drops = [];
+
+            for (let i = 0; i < maxDrops; i++) {
+                r_drops.push({
+                    x: Math.random() * canvas.width * 1.3 - (canvas.width * 0.3),
+                    y: Math.random() * canvas.height,
+                    len: Math.random() * 25 + 15,
+                    speedX: Math.random() * 4 + 4,
+                    speedY: Math.random() * 10 + 15 
+                });
+            }
+
+            function animateRain() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = 'rgba(164, 188, 204, 0.25)';
+                ctx.lineWidth = 1.2;
+                ctx.lineCap = 'round';
+                for (let i = 0; i < maxDrops; i++) {
+                    const p = r_drops[i];
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x + (p.len * angle), p.y + p.len);
+                    ctx.stroke();
+                    p.x += p.speedX; p.y += p.speedY;
+                    if (p.y > canvas.height || p.x > canvas.width) {
+                        p.x = Math.random() * canvas.width * 1.3 - (canvas.width * 0.3);
+                        p.y = -30;
+                    }
+                }
+                requestAnimationFrame(animateRain);
+            }
+            animateRain();
+        }
+        initRainEffect();
+
+        // 畫面震動與閃光觸發器
+        function triggerShakeAndFlash(isStratagem = false) {
+            const container = document.getElementById('gameContainer');
+            container.classList.remove('shake');
+            void container.offsetWidth; 
+            container.classList.add('shake');
+
+            if(isStratagem) {
+                const flash = document.getElementById('stratagemFlash');
+                flash.classList.remove('flash-active');
+                void flash.offsetWidth;
+                flash.classList.add('flash-active');
+            }
+        }
+
+        // 打字機特效
+        let typeWriterTimeout;
+        function typeWriter(element, text, speed = 35, callback) {
+            element.innerHTML = "";
+            let i = 0; let currentText = ""; let isTag = false;
+            clearTimeout(typeWriterTimeout);
+
+            function type() {
+                if (i < text.length) {
+                    currentText += text.charAt(i);
+                    element.innerHTML = currentText;
+                    if (text.charAt(i) === '<') isTag = true;
+                    if (text.charAt(i) === '>') isTag = false;
+                    i++;
+                    if (isTag) type();
+                    else typeWriterTimeout = setTimeout(type, speed);
+                } else if (callback) callback();
+            }
+            type();
+        }
+
+        // 更新介面數值與狀態
+        function updateUI(damage = 0) {
+            const fireEl = document.getElementById('fireStat');
+            const chaosEl = document.getElementById('chaosStat');
+            
+            fireEl.innerText = gameState.fire;
+            chaosEl.innerText = gameState.chaos;
+            
+            fireEl.style.textShadow = "0 0 15px #ff5500";
+            chaosEl.style.textShadow = "0 0 15px #ffaa00";
+            setTimeout(() => { fireEl.style.textShadow = ""; chaosEl.style.textShadow = ""; }, 500);
+            
+            const heartBar = document.getElementById('heartBarFill');
+            const heartBg = document.getElementById('healthBarBg');
+            heartBar.style.width = gameState.heart + '%';
+            
+            if(damage > 0) {
+                heartBg.classList.add('damage-flash');
+                setTimeout(() => heartBg.classList.remove('damage-flash'), 400);
+            }
+
+            if(gameState.heart <= 40) {
+                heartBar.style.background = 'linear-gradient(90deg, #990000, #ff3333)';
+            }
+            
+            if (gameState.fire >= 80) {
+                document.getElementById('shipSvg').style.filter = "drop-shadow(0 0 35px #ff3300)";
+                document.body.style.backgroundImage = "radial-gradient(circle at center, #5a1a11 0%, #1a0502 100%)";
+            }
+        }
+
+        // 動態過場更新
+        function updateSceneAnimated(text, buttonsHTML) {
+            const storyBox = document.getElementById('storyBox');
+            const btnContainer = document.getElementById('btnContainer');
+            
+            storyBox.classList.remove('blur-focus');
+            void storyBox.offsetWidth;
+            
+            storyBox.style.opacity = 0;
+            btnContainer.style.opacity = 0;
+            btnContainer.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                storyBox.classList.add('blur-focus');
+                storyBox.style.opacity = 1;
+                typeWriter(storyBox, text, 30, () => {
+                    btnContainer.innerHTML = buttonsHTML;
+                    btnContainer.style.opacity = 1;
+                    btnContainer.style.pointerEvents = 'all';
+                });
+            }, 600);
+        }
+
+        // 劇情腳本
+        const introText = "東南風狂嘯，撕扯著江面上的戰旗！<br><br>黃蓋的數十隻火船此時已卸下偽裝，化作漫天烈火，藉著驚天風勢直挺挺地撞入了曹操的烏林水寨！由於曹軍戰船皆以鐵索相連，火勢如燎原之火，瞬間蔓延開來！滿江熊熊烈火，將夜空映照得亮如白晝。<br><br>然而，曹操麾下北方精銳正試圖斬斷鐵索、組織弓箭手反擊。歷史的交叉點就在眼前，你必須立刻與諸葛亮做出決策！";
+
+        window.onload = () => {
+            const storyBox = document.getElementById('storyBox');
+            const btnContainer = document.getElementById('btnContainer');
+            setTimeout(() => {
+                typeWriter(storyBox, introText, 35, () => {
+                    btnContainer.innerHTML = `
+                        <button class="action-btn" onclick="makeChoice('push_fleet')">指揮聯軍戰船全面壓上，擴大火勢 (安全推進)</button>
+                        <button class="action-btn stratagem" onclick="makeChoice('execute_stratagem')">【發動奇謀】催動八陣圖殘卷，封鎖曹軍退路 (消耗20老臣心)</button>
+                    `;
+                    btnContainer.style.opacity = 1;
+                    btnContainer.style.pointerEvents = 'all';
+                });
+            }, 500);
+        };
+
+        // 遊戲抉擇邏輯
+        function makeChoice(choice) {
+            const battleBanner = document.getElementById('battleBanner');
+
+            if (choice === 'push_fleet') {
+                gameState.fire += 30; gameState.chaos += 20; updateUI();
+                updateSceneAnimated(
+                    "你揮動令旗，江東水軍在周瑜與韓當的親率下衝殺入寨！飛箭如雨，火船四處衝撞。曹軍戰船上的鐵索因高溫而熔解，慘叫聲、戰鼓聲不絕於耳。<br><br>然而，曹操在中軍親衛護送下，已開始棄船登陸，企圖從烏林陸路狼狽撤退。且有部分北方精銳準備拼死反撲，歷史的交叉點就在眼前！",
+                    `<button class="action-btn" onclick="makeChoice('chase_standard')">派兵由陸路追擊曹操殘部 (維持常規戰果)</button>
+                     <button class="action-btn stratagem" onclick="makeChoice('execute_stratagem_final')">【發動奇謀】引動天命之火，焚燒烏林旱寨 (消耗25老臣心)</button>
+                     <button class="action-btn coward" onclick="makeChoice('hesitate')">【保守觀望】保存實力，等待周瑜主力上前 (安全)</button>`
+                );
+            } 
+            else if (choice === 'hesitate') {
+                // Bad Ending 觸發邏輯
+                triggerShakeAndFlash(false);
+                gameState.fire -= 20; gameState.chaos -= 20; 
+                updateUI();
+                updateSceneAnimated(
+                    "你為了保全兵力選擇了觀望。然而戰場瞬息萬變，周瑜的主力被江面殘骸阻擋，未及時趕到！<br><br>曹軍大將張遼、許褚趁機集結殘部，不但護送曹操突圍，更指揮死士推動著燃燒的戰船，順著江流反撞向聯軍水寨！<br>原本的燎原之火失去了壓制，瞬間吞噬了江東的大營！",
+                    `<button class="action-btn stratagem" onclick="makeChoice('bad_end_fire')">歷史的洪流將你吞沒...</button>`
+                );
+            }
+            else if (choice === 'bad_end_fire') {
+                // 進入 Bad Ending 畫面表現
+                battleBanner.innerHTML = "「 銅 雀 春 深 鎖 二 喬 」";
+                battleBanner.style.color = "#ff3333";
+                document.body.style.backgroundImage = "radial-gradient(circle at center, #1a0502 0%, #000 100%)";
+                
+                // 關閉特效，營造死寂感
+                document.getElementById('shipSvg').style.filter = "grayscale(100%) opacity(0.5)";
+                document.getElementById('svgFireParticles').style.opacity = 0;
+                document.getElementById('fireBg').style.opacity = 0;
+                document.getElementById('heatHaze').style.opacity = 0;
+                document.getElementById('particlesContainer').style.opacity = 0;
+                document.getElementById('rainCanvas').style.opacity = 0;
+                
+                // 戰船變色
+                document.getElementById('shipPath1').style.stroke = "#555";
+                document.getElementById('shipPath2').style.stroke = "#555";
+                document.getElementById('shipPath3').style.stroke = "#555";
+
+                updateSceneAnimated(
+                    "【Bad Ending：業火反噬 ， 霸業灰飛】<br><br>你的猶豫導致了戰機的延誤。曹操大軍雖然受創，但成功突破了火網，反殺入江東大營。<br>孫劉聯軍潰敗，諸葛亮在亂軍中不知所終。<br><br>你改變了歷史，卻將其推向了毀滅的深淵。",
+                    `<button class="action-btn stratagem" onclick="location.reload()">重新抉擇</button>`
+                );
+            }
+            else if (choice === 'execute_stratagem') {
+                triggerShakeAndFlash(true); 
+                gameState.fire += 50; gameState.chaos += 50; gameState.heart -= 20;
+                updateUI(20);
+                updateSceneAnimated(
+                    "你轉向諸葛亮，他面色凝重，深吸一口氣，猛地將雙手按在七星壇的陣眼之上！「八陣圖・火亂流！」<br><br>長江之上的東南風竟在這一刻夾雜了奇門遁甲的法性，火舌化作無數火鳳凰，精準地阻斷了試圖砍斷鐵索的曹軍！百萬大軍瞬間崩潰，徹底陷入混亂！<br><span style='color:#ff3333; font-weight:bold;'>【系統提示：老臣心 -20】</span><br><br>曹操在死士拼死護衛下，倉皇逃向華容道旱路。此時火勢已達巔峰，曹軍大勢已去！",
+                    `<button class="action-btn" onclick="makeChoice('huarong_pass')">前往華容道，佈下最後伏兵</button>`
+                );
+            }
+            else if (choice === 'chase_standard') {
+                gameState.fire = 80; gameState.chaos = 70; updateUI();
+                updateSceneAnimated(
+                    "常規追擊迫使曹操丟盔棄甲。長江江水被大火映得血紅。歷史上的赤壁大戰在你的見證下迎來了高潮，曹操主力死傷殆盡，北方在數年內無力南下。<br><br>戰局已定，然而看著漫天硝煙，你身旁的諸葛亮卻長嘆了一聲，捂著胸口劇烈咳嗽起來。縱使赤壁大勝，天命的齒輪依然沉重……",
+                    `<button class="action-btn" onclick="makeChoice('victory_end')">清點戰果，戰役勝利</button>`
+                );
+            }
+            else if (choice === 'execute_stratagem_final') {
+                triggerShakeAndFlash(true); 
+                gameState.fire = 100; gameState.chaos = 90; gameState.heart -= 25;
+                updateUI(25);
+                updateSceneAnimated(
+                    "你不忍看曹操主力遁逃，要求徹底斷其根本。諸葛亮苦笑一聲：「亮，敢不鞠躬盡瘁。」他燃盡最後的心力，將南屏山的風勢強行延伸至陸地旱寨，烏林瞬間化作一片焦土！<br><span style='color:#ff3333; font-weight:bold;'>【系統提示：老臣心 -25，孔明神魂受到重創】</span><br><br>曹軍主力幾乎全軍覆沒，歷史被保全到了極致。然而，諸葛亮的身形猛地一晃，嘴角溢出一絲鮮血，星象的光芒在他眼中暗淡了下去……",
+                    `<button class="action-btn" onclick="makeChoice('victory_end')">扶住搖搖欲墜的孔明...</button>`
+                );
+            }
+            else if (choice === 'huarong_pass') {
+                gameState.fire = 100; gameState.chaos = 100; updateUI();
+                updateSceneAnimated(
+                    "華容道上，風雨交加。關羽最終如歷史所記載那般，因義氣放走了曹操。三國鼎立的雛形，已在這一場烈火中徹底奠定。<br><br>當百萬大軍的喧囂散去，赤壁的火光漸漸熄滅，留下的只有長江畔滿目的瘡痍。你轉過身，發現孔明的身軀顯得無比倦怠。他為了這場大勝，付出的是常人難以想像的代價。",
+                    `<button class="action-btn" onclick="makeChoice('victory_end')">歷史保全成功，進入終章</button>`
+                );
+            }
+            else if (choice === 'victory_end') {
+                battleBanner.innerHTML = "「 檣 櫓 灰 飛 煙 滅 」";
+                battleBanner.style.color = "#ff3333";
+                updateSceneAnimated(
+                    "【決戰勝利】<br><br>大火燃盡了曹操席捲天下的野心，也保全了孫劉聯軍的危局。談笑間，檣櫓灰飛煙滅。<br><br>然而，這場決定天下命運的赤壁大戰結束了，但「觀史者」的旅程尚未完結。隨著赤壁的硝煙散去，時間的長河開始瘋狂加速，你將被迫跟隨那顆逐漸黯淡的巨星，走向蜀漢命運的終點……",
+                    `<button class="action-btn stratagem" onclick="window.location.href='赤壁3.html'">進入終章：淚滿衣襟</button>`
+                );
+            }
+        }
+    </script>
+</body>
+</html>

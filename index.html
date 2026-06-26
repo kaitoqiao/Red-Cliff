@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤壁：折戟與星落 - 第一章：頻煩天下</title>
+    <style>
+        /* 基礎重置 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0f1712;
+            color: #d4cdb4;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', Georgia, serif;
+            background-image: radial-gradient(circle at center, #1c2b21 0%, #0a0f0c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 頂部狀態列 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #4a5c4d;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            color: #8c9c8e;
+            letter-spacing: 2px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 1.5s ease, transform 1.5s ease;
+        }
+
+        .status-bar.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .status-item span {
+            color: #e3bc74;
+            font-weight: bold;
+            transition: color 0.5s ease, text-shadow 0.5s ease;
+        }
+
+        /* 詩句特效 (加入呼吸燈效果) */
+        .poem-banner {
+            font-family: 'Noto Serif TC', serif;
+            font-size: 24px;
+            letter-spacing: 6px;
+            color: #e3bc74;
+            margin-bottom: 30px;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+            transition: opacity 2s ease, transform 2s ease;
+        }
+
+        .poem-banner.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            animation: poemPulse 4s infinite alternate ease-in-out;
+        }
+
+        @keyframes poemPulse {
+            0% { text-shadow: 0 0 5px rgba(227, 188, 116, 0.2); }
+            100% { text-shadow: 0 0 20px rgba(227, 188, 116, 0.8), 0 0 10px rgba(227, 188, 116, 0.5); }
+        }
+
+        /* 敘事文本框 */
+        .story-box {
+            min-height: 120px;
+            margin-bottom: 40px;
+            line-height: 1.8;
+            font-size: 18px;
+            color: #c4d1c6;
+            transition: opacity 0.5s ease;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #4a5c4d;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+        }
+
+        /* 互動按鈕 (加入波紋與浮動效果) */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            transition: opacity 0.5s ease;
+        }
+
+        .action-btn {
+            background: rgba(20, 30, 22, 0.6);
+            border: 1px solid #4a5c4d;
+            color: #aebfab;
+            padding: 12px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 80%;
+            max-width: 400px;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn:hover {
+            border-color: #e3bc74;
+            color: #fff;
+            background-color: rgba(227, 188, 116, 0.1);
+            transform: translateX(10px) scale(1.02);
+            box-shadow: -5px 5px 15px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(227, 188, 116, 0.2);
+        }
+
+        /* 背景竹影裝飾與粒子 */
+        .ambient-bamboo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(20, 40, 25, 0.6) 0%, transparent 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(174, 191, 171, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) translateX(0) scale(0.5); opacity: 0; }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) translateX(50px) scale(1.5); opacity: 0; }
+        }
+
+        /* 茅廬圖示 (加入 SVG 描邊動畫) */
+        .cottage-svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px auto;
+            opacity: 0;
+            transition: opacity 1s ease;
+            filter: drop-shadow(0 0 5px rgba(227, 188, 116, 0));
+        }
+
+        .cottage-svg path {
+            stroke-dasharray: 400;
+            stroke-dashoffset: 400;
+            transition: stroke-dashoffset 2.5s ease-in-out, filter 1s ease;
+        }
+
+        .cottage-svg.show {
+            opacity: 0.8;
+            filter: drop-shadow(0 0 8px rgba(227, 188, 116, 0.4));
+        }
+
+        .cottage-svg.show path {
+            stroke-dashoffset: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景光塵容器 -->
+    <div class="ambient-bamboo" id="particleContainer"></div>
+
+    <div class="game-container">
+        <!-- 頂部狀態列 -->
+        <div class="status-bar" id="statusBar">
+            <div class="status-item">蜀漢羈絆：<span id="bondStat">0</span></div>
+            <div class="status-item">天下計(情報)：<span id="intelStat">0</span></div>
+            <div class="status-item">老臣心(系統)：<span id="heartStat" style="color:#555;">未解鎖</span></div>
+        </div>
+
+        <!-- 茅廬圖示 -->
+        <svg class="cottage-svg" id="cottageSvg" viewBox="0 0 100 100" fill="none" stroke="#e3bc74" stroke-width="1.5">
+            <path d="M10 50 L50 20 L90 50" stroke-linecap="round"/>
+            <path d="M25 40 L25 80 L75 80 L75 40" stroke-linecap="round"/>
+            <path d="M40 80 L40 55 L60 55 L60 80" stroke-linecap="round"/>
+            <path d="M50 20 L50 10 M55 10 L45 10" stroke-linecap="round"/>
+        </svg>
+
+        <div class="poem-banner" id="poemBanner">
+            「 三 顧 頻 煩 天 下 計 」
+        </div>
+
+        <!-- 故事敘事區 -->
+        <div class="story-box" id="storyBox"></div>
+
+        <!-- 互動選項 -->
+        <div class="btn-container" id="btnContainer" style="opacity: 0; pointer-events: none;">
+            <!-- 按鈕會在文字打完後顯示 -->
+        </div>
+    </div>
+
+    <script>
+        // --- 視覺特效：產生背景光塵粒子 ---
+        function createParticles() {
+            const container = document.getElementById('particleContainer');
+            const particleCount = 25; // 粒子數量
+            
+            for(let i = 0; i < particleCount; i++) {
+                let p = document.createElement('div');
+                p.classList.add('particle');
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.width = Math.random() * 4 + 2 + 'px';
+                p.style.height = p.style.width;
+                p.style.animationDuration = Math.random() * 10 + 10 + 's';
+                p.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(p);
+            }
+        }
+        createParticles();
+
+        // 遊戲狀態變數
+        let gameState = {
+            bond: 0,
+            intel: 0,
+            heartUnlocked: false
+        };
+
+        // UI 更新特效
+        function updateUI() {
+            const bondEl = document.getElementById('bondStat');
+            const intelEl = document.getElementById('intelStat');
+            
+            bondEl.innerText = gameState.bond;
+            intelEl.innerText = gameState.intel;
+            
+            // 數值增加時的閃爍特效
+            bondEl.style.textShadow = "0 0 15px #e3bc74";
+            intelEl.style.textShadow = "0 0 15px #e3bc74";
+            setTimeout(() => {
+                bondEl.style.textShadow = "none";
+                intelEl.style.textShadow = "none";
+            }, 800);
+
+            if (gameState.heartUnlocked) {
+                const heartEl = document.getElementById('heartStat');
+                heartEl.innerText = "100/100";
+                heartEl.style.color = "#c93b2b";
+                heartEl.style.textShadow = "0 0 10px rgba(201, 59, 43, 0.6)";
+            }
+        }
+
+        // --- 核心特效：打字機文字顯示 ---
+        let typeWriterTimeout;
+        function typeWriter(element, text, speed = 35, callback) {
+            element.innerHTML = "";
+            let i = 0;
+            let currentText = "";
+            let isTag = false;
+            clearTimeout(typeWriterTimeout);
+
+            function type() {
+                if (i < text.length) {
+                    currentText += text.charAt(i);
+                    element.innerHTML = currentText;
+                    
+                    // 瞬間處理 HTML 標籤（如 <br>）避免逐字印出標籤碼
+                    if (text.charAt(i) === '<') isTag = true;
+                    if (text.charAt(i) === '>') isTag = false;
+
+                    i++;
+                    if (isTag) {
+                        type(); // 標籤不延遲，直接遞迴
+                    } else {
+                        typeWriterTimeout = setTimeout(type, speed);
+                    }
+                } else if (callback) {
+                    callback(); // 文字打完後執行回呼函數 (顯示按鈕)
+                }
+            }
+            type();
+        }
+
+        // 劇情轉場與推進邏apos輯
+        function updateScene(htmlText, buttonsHTML) {
+            const storyBox = document.getElementById('storyBox');
+            const btnContainer = document.getElementById('btnContainer');
+            
+            storyBox.style.opacity = 0;
+            btnContainer.style.opacity = 0;
+            btnContainer.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                storyBox.style.opacity = 1;
+                // 呼叫打字機特效
+                typeWriter(storyBox, htmlText, 30, () => {
+                    // 文字顯示完畢後，淡入按鈕
+                    btnContainer.innerHTML = buttonsHTML;
+                    btnContainer.style.opacity = 1;
+                    btnContainer.style.pointerEvents = 'all';
+                });
+            }, 500);
+        }
+
+        // --- 劇情腳本 ---
+        const introText = "系統提示：時空同步完成。年份：建安十三年。地點：隆中。<br><br>你從一陣眩暈中醒來，鼻尖縈繞著清冷的竹葉香與殘雪的氣息。前方不遠處有一座簡樸的茅廬。門外站著三人，為首者雙手下垂，神色恭敬；身後一人面如重棗，撫鬚不語；另一人豹頭環眼，正滿臉不耐煩地來回踱步。";
+        
+        // 初始載入
+        window.onload = () => {
+            updateScene(introText, `<button class="action-btn" onclick="makeChoice('approach')">走上前去，觀察三人</button>`);
+        };
+
+        function makeChoice(choice) {
+            const statusBar = document.getElementById('statusBar');
+            const poemBanner = document.getElementById('poemBanner');
+            const cottageSvg = document.getElementById('cottageSvg');
+
+            if (choice === 'approach') {
+                statusBar.classList.add('show'); // 狀態列滑出特效
+                updateScene(
+                    "那豹頭環眼的壯漢突然暴喝一聲：「大哥！這村夫好大架子，待我放一把火，看他起不起來！」<br><br>劉備連忙喝止：「翼德休得無禮！」<br><br>你深知此刻正是歷史轉捩點，你決定：",
+                    `<button class="action-btn" onclick="makeChoice('calm_zhang')">上前勸阻張飛，展現氣度 (增加羈絆)</button>
+                     <button class="action-btn" onclick="makeChoice('speak_strategy')">高聲吟誦天下大勢，引起注意 (增加情報)</button>`
+                );
+            } 
+            else if (choice === 'calm_zhang') {
+                gameState.bond += 10;
+                updateUI();
+                updateScene(
+                    "你步出竹林，朗聲道：「將軍且慢，臥龍既稱奇才，自當有考驗求賢者之意，若毀其廬，豈不錯失天下？」<br><br>關羽聞言微微點頭，劉備也向你投來感激的目光。張飛雖哼了一聲，卻也收起了火摺子。<br><br><span style='color:#e3bc74'>【蜀漢羈絆 +10】</span>",
+                    `<button class="action-btn" onclick="makeChoice('meet_zhuge')">童子開門，跟隨劉備入內</button>`
+                );
+            }
+            else if (choice === 'speak_strategy') {
+                gameState.intel += 10;
+                updateUI();
+                updateScene(
+                    "你步出竹林，高聲道：「曹操擁百萬之眾，挾天子以令諸侯，此誠不可與爭鋒。若圖霸業，需待時機。」<br><br>劉備聞言渾身一震，連忙向你作揖：「先生高見，竟與備心中所思不謀而合。」<br><br><span style='color:#e3bc74'>【天下計(情報) +10】</span>",
+                    `<button class="action-btn" onclick="makeChoice('meet_zhuge')">童子開門，受邀一同入內</button>`
+                );
+            }
+            else if (choice === 'meet_zhuge') {
+                cottageSvg.classList.add('show'); // 觸發茅廬 SVG 描邊畫圖動畫
+                poemBanner.classList.add('show'); // 觸發詩句呼吸燈
+                updateScene(
+                    "吱呀一聲，柴門推開。童子引你們入草堂。堂上端坐一人，羽扇綸巾，目光如炬，彷彿早已看穿了你身上不屬於這個時代的氣息。<br><br>「將軍既來，亮便有一圖相贈。」諸葛亮展開地圖，隨後目光轉向你，「這位觀史者，歷史的軌跡已然鬆動，接下來的赤壁，需要你的籌謀。」",
+                    `<button class="action-btn" onclick="makeChoice('unlock_system')">接過隆中對策</button>`
+                );
+            }
+            else if (choice === 'unlock_system') {
+                gameState.heartUnlocked = true;
+                updateUI();
+                poemBanner.innerHTML = "「 三 顧 頻 煩 天 下 計 ， 兩 朝 開 濟 老 臣 心 」";
+                updateScene(
+                    "隨著你觸碰地圖，一股沉重的使命感湧入腦海。<br><br><span style='color:#c93b2b'>【系統解鎖：老臣心】</span><br>你獲得了支配「奇謀」的能力，但每次發動都將消耗諸葛亮的「老臣心」。若在五丈原前耗盡，將無法達成真結局。<br><br>東風將起，赤壁的帷幕正式拉開。",
+                    `<button class="action-btn" onclick="window.location.href='赤壁2.html'">啟程前往江東</button>`
+                );
+            }
+        }
+    </script>
+</body>
+</html>

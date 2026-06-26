@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤壁：折戟與星落 - 終章：淚滿衣襟</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0a0a0c;
+            color: #d1c7b8;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', Georgia, serif;
+            background-image: radial-gradient(circle at top, #1c1a21 0%, #030304 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: background-color 3s ease;
+        }
+
+        /* 生命流逝的暗角呼吸特效 */
+        .vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.95) 120%);
+            pointer-events: none; z-index: 5;
+            animation: breathe 5s infinite alternate ease-in-out;
+        }
+        @keyframes breathe {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.05); }
+        }
+
+        /* 畫面震動特效 */
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-4px, 3px) rotate(-1deg); }
+            20%, 40%, 60%, 80% { transform: translate(4px, -3px) rotate(1deg); filter: contrast(1.2); }
+        }
+        .shake { animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; }
+
+        /* 雙重閃電特效 */
+        .lightning-flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #e0f2fe;
+            z-index: 50; opacity: 0; pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+        .flash-anim { animation: doubleFlash 0.5s ease-out forwards; }
+        @keyframes doubleFlash {
+            0% { opacity: 0; }
+            10% { opacity: 0.9; }
+            20% { opacity: 0; }
+            30% { opacity: 0.6; }
+            100% { opacity: 0; }
+        }
+
+        .game-container {
+            width: 100%; max-width: 800px; padding: 40px;
+            text-align: center; position: relative; z-index: 10;
+        }
+
+        /* 頂部狀態列與進度條 */
+        .status-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #3d3640; padding-bottom: 15px; margin-bottom: 30px;
+            font-size: 14px; color: #8f8594; letter-spacing: 2px;
+        }
+        .bar-container { display: flex; align-items: center; gap: 10px; }
+        .bar-bg {
+            width: 100px; height: 8px; background-color: #1a171c;
+            border-radius: 4px; overflow: hidden;
+            border: 1px solid #3d3640; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .tears-bar-fill {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #3a5c7d, #82a8d1);
+            box-shadow: 0 0 10px rgba(130, 168, 209, 0.6); transition: width 1s ease;
+        }
+        .heart-bar-fill {
+            height: 100%; width: 5%;
+            background: linear-gradient(90deg, #5c1414, #c93b2b);
+            box-shadow: 0 0 8px rgba(201, 59, 43, 0.8);
+            transition: width 1s ease, filter 1s ease;
+        }
+        .heart-bar-fill.dying { width: 0%; filter: grayscale(100%); }
+
+        /* 詩句特效 */
+        .poem-banner {
+            font-family: 'Noto Serif TC', serif; font-size: 24px; letter-spacing: 6px;
+            color: #82a8d1; margin-bottom: 30px;
+            opacity: 0; transform: translateY(-20px); transition: all 2s ease;
+            text-shadow: 0 0 15px rgba(130, 168, 209, 0.3);
+        }
+        .poem-banner.show { opacity: 1; transform: translateY(0); }
+        .poem-banner.glow {
+            text-shadow: 0 0 20px rgba(130, 168, 209, 0.8), 0 0 40px rgba(130, 168, 209, 0.4);
+            transform: scale(1.05); color: #e0f2fe;
+        }
+
+        /* 敘事文本框 (加入對焦特效) */
+        .story-box {
+            min-height: 160px; margin-bottom: 40px; line-height: 1.9; font-size: 18px; color: #c7bdbc;
+            text-align: left; background: rgba(15, 12, 15, 0.7);
+            padding: 25px; border-radius: 8px; border-left: 4px solid #574b5c;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            transition: border-color 2s ease, filter 0.8s ease;
+        }
+        .story-box.blur-focus { animation: blurFocus 1s forwards; }
+        @keyframes blurFocus {
+            0% { filter: blur(5px); opacity: 0; }
+            100% { filter: blur(0px); opacity: 1; }
+        }
+
+        /* 互動按鈕 */
+        .btn-container {
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+            opacity: 1; transition: opacity 1s ease;
+        }
+        .action-btn {
+            background: rgba(42, 37, 43, 0.4); border: 1px solid #574b5c; color: #b5aab8;
+            padding: 14px 30px; font-size: 16px; cursor: pointer; letter-spacing: 2px; border-radius: 4px;
+            width: 85%; max-width: 480px; position: relative; overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .action-btn:hover {
+            border-color: #82a8d1; color: #fff; background-color: rgba(130, 168, 209, 0.1);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 0 15px rgba(130, 168, 209, 0.2);
+        }
+
+        /* 隱藏真結局按鈕的流光特效 */
+        .action-btn.true-end {
+            color: #82a8d1; border-color: #4d6680; box-shadow: 0 0 10px rgba(130, 168, 209, 0.2);
+        }
+        .action-btn.true-end::after {
+            content: ""; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(130, 168, 209, 0.4), transparent);
+            transform: skewX(-20deg); animation: shine 3s infinite;
+        }
+        @keyframes shine { 0% { left: -100%; } 20%, 100% { left: 200%; } }
+
+        /* 七星燈 SVG 與光暈 */
+        .lamp-container { position: relative; margin: 0 auto 30px auto; width: 150px; height: 120px; }
+        .lamp-glow {
+            position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(232, 160, 77, 0.3) 0%, transparent 70%);
+            transition: all 2s ease; pointer-events: none;
+        }
+        .lamp-svg { width: 100%; height: 100%; opacity: 0.9; position: relative; z-index: 2; }
+
+        .flame {
+            fill: #e8a04d; transform-origin: center bottom;
+            animation: flicker 2s infinite alternate; transition: fill 2s ease, opacity 1s ease;
+        }
+        .flame.dying { fill: #5c4125; animation: dying-flicker 0.2s infinite alternate; }
+        .flame.extinguished { opacity: 0 !important; }
+        .flame.spirit { fill: #82a8d1; filter: drop-shadow(0 0 15px rgba(130,168,209,1)); animation: float-flicker 3s infinite alternate; }
+
+        @keyframes flicker {
+            0% { transform: scale(0.9) rotate(-2deg); opacity: 0.8; }
+            100% { transform: scale(1.1) rotate(2deg); opacity: 1; filter: drop-shadow(0 0 8px rgba(232, 160, 77, 0.6)); }
+        }
+        @keyframes dying-flicker {
+            0% { transform: scale(0.3) rotate(-5deg); opacity: 0.2; }
+            100% { transform: scale(0.6) rotate(5deg); opacity: 0.6; }
+        }
+        @keyframes float-flicker {
+            0% { transform: scale(0.95) translateY(0); opacity: 0.9; }
+            100% { transform: scale(1.05) translateY(-3px); opacity: 1; }
+        }
+
+        /* 熄滅煙霧粒子 */
+        .smoke-particle {
+            position: absolute; width: 6px; height: 6px; border-radius: 50%;
+            background-color: rgba(150, 150, 150, 0.6); filter: blur(2px);
+            animation: smokeRise 2s forwards ease-out; pointer-events: none; z-index: 3;
+        }
+        @keyframes smokeRise {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+            100% { transform: translate(calc(10px - 20px * var(--dirX)), -40px) scale(3); opacity: 0; }
+        }
+
+        /* 真結局：星空轉場 */
+        .starry-sky {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; opacity: 0; transition: opacity 4s ease-in-out; pointer-events: none;
+        }
+        .star {
+            position: absolute; background: #fff; border-radius: 50%;
+            box-shadow: 0 0 4px #fff; animation: twinkle alternate infinite ease-in-out;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* 環境特效 (落葉與雨) */
+        .env-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: hidden; transition: opacity 3s ease; }
+        
+        .rain-drop {
+            position: absolute;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(130, 168, 209, 0.4));
+            width: 1px; animation: rain-fall linear infinite;
+        }
+        @keyframes rain-fall { 0% { transform: translateY(-100px); } 100% { transform: translateY(100vh); } }
+
+        .spirit-particle {
+            position: absolute; border-radius: 50%;
+            background: #82a8d1; box-shadow: 0 0 10px #82a8d1;
+            animation: rise-up linear forwards;
+        }
+        @keyframes rise-up {
+            0% { transform: translateY(0) scale(0); opacity: 0; }
+            20% { transform: translateY(-30px) scale(1.2); opacity: 0.9; }
+            100% { transform: translateY(-180px) scale(0.1); opacity: 0; }
+        }
+
+        /* 螢幕淡出轉場 */
+        .fade-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #050405; z-index: 100; opacity: 0; pointer-events: none;
+            transition: opacity 3s ease; display: flex; justify-content: center; align-items: center;
+        }
+        .fade-overlay.active { opacity: 1; pointer-events: all; }
+        .ending-text {
+            color: #d1c7b8; font-size: 20px; letter-spacing: 4px;
+            text-align: center; line-height: 2.2; opacity: 0;
+            transition: opacity 2s ease 1s; width: 80%; max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景動態層 -->
+    <div class="starry-sky" id="starrySky"></div>
+    <div class="vignette"></div>
+    <div class="env-layer" id="envContainer"></div>
+    <div class="lightning-flash" id="lightningFlash"></div>
+    
+    <div class="fade-overlay" id="fadeOverlay">
+        <div class="ending-text" id="endingText"></div>
+    </div>
+
+    <div class="game-container" id="gameContainer">
+        <!-- 頂部狀態列 -->
+        <div class="status-bar" id="statusBar">
+            <div class="bar-container">
+                英雄淚
+                <div class="bar-bg"><div class="tears-bar-fill" id="tearsBarFill"></div></div>
+            </div>
+            <div class="bar-container">
+                老臣心
+                <div class="bar-bg"><div class="heart-bar-fill" id="heartBarFill"></div></div>
+            </div>
+        </div>
+
+        <!-- 七星燈 SVG -->
+        <div class="lamp-container">
+            <div class="lamp-glow" id="lampGlow"></div>
+            <svg class="lamp-svg" id="lampSvg" viewBox="0 0 200 100">
+                <path d="M70 80 L130 80 L120 60 L80 60 Z" fill="#2a252b" stroke="#574b5c" stroke-width="2"/>
+                <path d="M95 60 L95 40 L105 40 L105 60 Z" fill="#2a252b" />
+                <path d="M60 40 L140 40 L130 30 L70 30 Z" fill="#3a3238" stroke="#574b5c" stroke-width="1.5"/>
+                <!-- 燈火 -->
+                <path id="mainFlame" class="flame" d="M100 10 Q90 25 95 30 Q100 35 105 30 Q110 25 100 10 Z" />
+                <path d="M30 50 L50 50 L45 45 L35 45 Z" fill="#3a3238" />
+                <path id="subFlame1" class="flame" d="M40 35 Q35 42 38 45 Q40 48 42 45 Q45 42 40 35 Z" style="animation-delay: 0.3s;" />
+                <path d="M150 50 L170 50 L165 45 L155 45 Z" fill="#3a3238" />
+                <path id="subFlame2" class="flame" d="M160 35 Q155 42 158 45 Q160 48 162 45 Q165 42 160 35 Z" style="animation-delay: 0.7s;" />
+            </svg>
+        </div>
+
+        <div class="poem-banner" id="poemBanner">
+            「 出 師 未 捷 身 先 死 」
+        </div>
+
+        <!-- 故事敘事區 -->
+        <div class="story-box" id="storyBox"></div>
+
+        <div class="btn-container" id="btnContainer" style="opacity: 0; pointer-events: none;"></div>
+    </div>
+
+    <script>
+        // --- 視覺特效生成器 ---
+        const envContainer = document.getElementById('envContainer');
+        const starrySky = document.getElementById('starrySky');
+
+        function createLeaves() {
+            for(let i=0; i<15; i++) {
+                let leaf = document.createElement('div');
+                leaf.style.position = 'absolute';
+                leaf.style.width = (Math.random() * 10 + 5) + 'px';
+                leaf.style.height = (Math.random() * 5 + 3) + 'px';
+                leaf.style.backgroundColor = Math.random() > 0.5 ? '#5c4125' : '#4a3b32';
+                leaf.style.borderRadius = '50% 0 50% 0'; 
+                leaf.style.opacity = Math.random() * 0.4 + 0.1;
+                leaf.style.left = Math.random() * 120 - 10 + 'vw';
+                leaf.style.top = '-20px';
+                let duration = Math.random() * 8 + 5;
+                leaf.animate([
+                    { transform: `translate(0, 0) rotate(0deg)` },
+                    { transform: `translate(${Math.random() * 200 - 100}px, 100vh) rotate(${Math.random() * 720}deg)` }
+                ], { duration: duration * 1000, delay: Math.random() * 5 * 1000, iterations: Infinity });
+                envContainer.appendChild(leaf);
+            }
+        }
+
+        function createRain() {
+            for(let i=0; i<40; i++) {
+                let drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.height = (Math.random() * 30 + 20) + 'px';
+                drop.style.animationDuration = (Math.random() * 0.4 + 0.4) + 's';
+                drop.style.animationDelay = Math.random() * 2 + 's';
+                envContainer.appendChild(drop);
+            }
+        }
+
+        function createStars() {
+            for(let i=0; i<80; i++) {
+                let star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = (Math.random() * 2 + 1) + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + 'vw';
+                star.style.top = Math.random() * 100 + 'vh';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starrySky.appendChild(star);
+            }
+        }
+
+        // 熄滅煙霧
+        function spawnSmoke(x, y) {
+            for(let i=0; i<3; i++) {
+                let smoke = document.createElement('div');
+                smoke.className = 'smoke-particle';
+                smoke.style.left = x + 'px';
+                smoke.style.top = y + 'px';
+                smoke.style.setProperty('--dirX', Math.random());
+                document.body.appendChild(smoke);
+                setTimeout(() => smoke.remove(), 2000);
+            }
+        }
+
+        // 靈魂火焰粒子
+        let spiritInterval;
+        function spawnSpiritParticles() {
+            const lamp = document.querySelector('.lamp-container');
+            spiritInterval = setInterval(() => {
+                let p = document.createElement('div');
+                p.className = 'spirit-particle';
+                p.style.width = Math.random() * 4 + 2 + 'px';
+                p.style.height = p.style.width;
+                p.style.left = (lamp.offsetLeft + lamp.offsetWidth/2 + (Math.random()*20 - 10)) + 'px';
+                p.style.top = (lamp.offsetTop + 30) + 'px';
+                p.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 3000);
+            }, 120);
+        }
+
+        createLeaves();
+        createRain();
+        createStars();
+
+        // --- 打字機特效 ---
+        let typeWriterTimeout;
+        function typeWriter(element, text, speed = 40, callback) {
+            element.innerHTML = "";
+            let i = 0; let currentText = ""; let isTag = false;
+            clearTimeout(typeWriterTimeout);
+
+            function type() {
+                if (i < text.length) {
+                    currentText += text.charAt(i);
+                    element.innerHTML = currentText;
+                    if (text.charAt(i) === '<') isTag = true;
+                    if (text.charAt(i) === '>') isTag = false;
+                    i++;
+                    if (isTag) type();
+                    else typeWriterTimeout = setTimeout(type, speed);
+                } else if (callback) callback();
+            }
+            type();
+        }
+
+        // --- 劇情與流程控制 ---
+        const introText = "時光飛逝，建興十二年，秋。<br><br>赤壁的烈火彷彿還在昨日，但此刻的你，卻身處於五丈原蕭瑟的秋風之中。帳外，秋雨連綿，蜀漢大軍的戰旗在風雨中顯得疲憊不堪。<br><br>帳內，七星燈的光芒搖曳不定。諸葛亮枯坐在木輪車上，手中依然緊握著那卷未批完的軍書。為了延續漢室的命脈，他的「老臣心」已然油盡燈枯。";
+
+        window.onload = () => {
+            const storyBox = document.getElementById('storyBox');
+            const btnContainer = document.getElementById('btnContainer');
+            storyBox.classList.add('blur-focus');
+            setTimeout(() => {
+                typeWriter(storyBox, introText, 40, () => {
+                    btnContainer.innerHTML = `<button class="action-btn" onclick="makeChoice('approach')">走近孔明，替他披上大衣</button>`;
+                    btnContainer.style.opacity = 1;
+                    btnContainer.style.pointerEvents = 'all';
+                });
+            }, 500);
+        };
+
+        function updateSceneAnimated(text, buttonsHTML) {
+            const storyBox = document.getElementById('storyBox');
+            const btnContainer = document.getElementById('btnContainer');
+            
+            // 重置對焦特效
+            storyBox.classList.remove('blur-focus');
+            void storyBox.offsetWidth; // 觸發重繪
+            
+            storyBox.style.opacity = 0;
+            btnContainer.style.opacity = 0;
+            btnContainer.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                storyBox.classList.add('blur-focus');
+                typeWriter(storyBox, text, 40, () => {
+                    btnContainer.innerHTML = buttonsHTML;
+                    btnContainer.style.opacity = 1;
+                    btnContainer.style.pointerEvents = 'all';
+                });
+            }, 800);
+        }
+
+        function makeChoice(choice) {
+            const poemBanner = document.getElementById('poemBanner');
+            const mainFlame = document.getElementById('mainFlame');
+            const subFlame1 = document.getElementById('subFlame1');
+            const subFlame2 = document.getElementById('subFlame2');
+            const heartBar = document.getElementById('heartBarFill');
+            const lampGlow = document.getElementById('lampGlow');
+            const gameContainer = document.getElementById('gameContainer');
+            const flash = document.getElementById('lightningFlash');
+            const lamp = document.querySelector('.lamp-container');
+
+            if (choice === 'approach') {
+                // 觸發雙重閃電與劇烈震動
+                flash.classList.add('flash-anim');
+                gameContainer.classList.add('shake');
+                
+                poemBanner.classList.add('show');
+                
+                // 熄滅兩側副燈，並產生青煙
+                setTimeout(() => {
+                    spawnSmoke(lamp.offsetLeft + 40, lamp.offsetTop + 40);
+                    spawnSmoke(lamp.offsetLeft + 160, lamp.offsetTop + 40);
+                }, 100);
+
+                // 火焰衰弱特效
+                mainFlame.classList.replace('flame', 'dying');
+                subFlame1.classList.add('extinguished');
+                subFlame2.classList.add('extinguished');
+                lampGlow.style.background = "radial-gradient(circle, rgba(92, 65, 37, 0.2) 0%, transparent 60%)";
+                heartBar.classList.add('dying');
+
+                updateSceneAnimated(
+                    "孔明緩緩抬起頭，看著你這個跨越時空的「觀史者」。他的眼神依舊清明，卻沒了當年在隆中時的銳氣。<br><br>「赤壁一戰，多虧有你。然亮本布衣，受先帝三顧之恩，只盼能克復中原... 如今，天命難違，這七星燈，終究是護不住了。」<br><br>忽然，一陣秋風猛地捲開帳篷，主燈的火焰劇烈顫抖，眼看就要熄滅！",
+                    `<button class="action-btn" onclick="makeChoice('let_go')">默然接受歷史的定局 (進入標準結局)</button>
+                     <button class="action-btn true-end" onclick="makeChoice('true_ending')">【匯聚英雄淚】將羈絆化作最後的光芒！</button>`
+                );
+            } 
+            else if (choice === 'let_go') {
+                mainFlame.classList.add('extinguished');
+                lampGlow.style.opacity = 0;
+                setTimeout(() => spawnSmoke(lamp.offsetLeft + 100, lamp.offsetTop + 30), 100);
+                
+                updateSceneAnimated(
+                    "你停下了腳步，因為你知道，歷史的軌跡不可違逆。<br><br>帳外的秋風吹滅了最後一盞燈。一代智星，就此隕落於五丈原。蜀漢將士的慟哭聲響徹夜空，那悲涼的哭聲，穿透了千年的時光。",
+                    `<button class="action-btn" onclick="showEnding('bad')">結束觀史之旅</button>`
+                );
+            }
+            else if (choice === 'true_ending') {
+                // 真結局高潮特效
+                poemBanner.innerHTML = "「 出 師 未 捷 身 先 死 ， 長 使 英 雄 淚 滿 襟 」";
+                poemBanner.classList.add('glow');
+                
+                mainFlame.classList.replace('dying', 'spirit');
+                lampGlow.style.background = "radial-gradient(circle, rgba(130, 168, 209, 0.5) 0%, transparent 70%)";
+                lampGlow.style.transform = "translate(-50%, -50%) scale(1.6)";
+                document.getElementById('storyBox').style.borderColor = "#82a8d1";
+                
+                spawnSpiritParticles(); // 觸發靈魂粒子
+
+                // 環境轉場：風雨停歇，星空浮現
+                document.getElementById('envContainer').style.opacity = 0;
+                document.getElementById('starrySky').style.opacity = 1;
+                document.body.style.backgroundImage = "radial-gradient(circle at top, #0f182b 0%, #030304 100%)";
+
+                updateSceneAnimated(
+                    "你將手中匯聚的「英雄淚」——劉備的信賴、關羽的傲骨、張飛的勇猛、趙雲的忠誠——全部注入那將熄的殘燈之中。<br><br>火焰沒有復燃成奪目的赤紅，而是化作了一抹寧靜幽遠的藍光。孔明看著這道光，嘴角露出了釋然的微笑。<br><br>「原來如此... 肉身雖死，但這份『老臣心』，已化作千古不滅的傳承。」他將最後一個錦囊交託於你，「觀史者，帶著它，回到你的時代吧。」",
+                    `<button class="action-btn true-end" onclick="showEnding('true')">接過錦囊，返回現代</button>`
+                );
+            }
+        }
+        
+        function showEnding(type) {
+            if(spiritInterval) clearInterval(spiritInterval);
+            const overlay = document.getElementById('fadeOverlay');
+            const endingText = document.getElementById('endingText');
+            
+            overlay.classList.add('active');
+            
+            setTimeout(() => {
+                if(type === 'bad') {
+                    endingText.innerHTML = "【 標準結局：星落秋風 】<br><br><span style='font-size: 16px; color: #8f8594;'>你回到了現代的長江畔。<br>手中的斷戟依舊冰冷。<br>歷史沒有改變，留下的只有無盡的遺憾與嘆息。</span><br><br><span style='color: #c93b2b; text-shadow: 0 0 10px rgba(201, 59, 43, 0.5);'>「出師未捷身先死，長使英雄淚滿襟。」</span>";
+                } else {
+                    endingText.innerHTML = "【 真結局：千古蜀相 】<br><br><span style='font-size: 16px; color: #8f8594;'>你回到了現代的長江畔。<br>手中的斷戟已化作飛灰，取而代之的，是一個古舊卻溫暖的錦囊。<br>你守護的不是冰冷的歷史，而是那份知其不可而為之的浪漫與精神。</span><br><br><span style='color: #82a8d1; text-shadow: 0 0 10px rgba(130,168,209,0.7); font-weight: bold;'>這份英雄之淚，將永遠潤澤後世的衣襟。</span><br><br><span style='font-size: 14px; color: #574b5c;'>- 感謝您的遊玩 -</span>";
+                }
+                endingText.style.opacity = 1;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
